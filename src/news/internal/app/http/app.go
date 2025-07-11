@@ -7,6 +7,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/zhavkk/news-service/src/news/internal/config"
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 )
 
@@ -15,7 +16,7 @@ type HTTPApp struct {
 	port     int
 }
 
-func New(port int) *HTTPApp {
+func New(cfg *config.Config) *HTTPApp {
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  5 * time.Second,
@@ -28,7 +29,7 @@ func New(port int) *HTTPApp {
 
 	return &HTTPApp{
 		fiberApp: app,
-		port:     port,
+		port:     cfg.HTTP.Port,
 	}
 }
 

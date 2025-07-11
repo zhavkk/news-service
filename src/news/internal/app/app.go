@@ -10,5 +10,9 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
+	httpServer := httpapp.New(cfg)
 
+	return &App{
+		HTTPServer: httpServer,
+	}
 }

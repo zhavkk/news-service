@@ -363,7 +363,7 @@ func (r *NewsRepository) List(
 	if len(newsList) > 0 {
 		if err = r.loadContentBlocks(ctx, newsList); err != nil {
 			logger.Log.Error(op, "Failed to load content blocks", err)
-			return nil, 0, err // ошибка уже обёрнута в loadContentBlocks
+			return nil, 0, err
 		}
 	}
 
