@@ -1,12 +1,14 @@
 SERVICE := news
+DB_URL := postgres://postgres:password@localhost:5432/news?sslmode=disable
+MIGRATIONS_DIR := ./src/news/migrations/postgres
 
 .PHONY: go-lint
 go-lint:
 	@echo "Running Go linter..."
 	@if [ -z "$$(find . -type f -name '*.go')" ]; then \
-		echo "No Go files found."; \
+    	echo "No Go files found."; \
 	else \
-		golangci-lint run; \
+    	golangci-lint run; \
 	fi
 
 
@@ -36,15 +38,15 @@ fmt: go-fmt
 test:
 	@echo "Running tests..."
 	@if [ -z "$$(find . -type f -name '*.go')" ]; then \
-		echo "No Go files found."; \
+	    echo "No Go files found."; \
 	else \
-		go test ./... -v; \
+	    go test ./... -v; \
 	fi
 
 .PHONY: docker-build
 docker-build:
 	@echo "Building Docker image..."
-	docker build -t news-service:latest .
+    docker build -t news-service:latest .
 
 .PHONY: docker-run
 docker-run:
