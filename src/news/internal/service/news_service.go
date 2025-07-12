@@ -2,7 +2,9 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -55,17 +57,20 @@ type NewsService struct {
 	newsRepo  NewsRepository
 	txManager storage.TxManagerInterface
 	redis     RedisClient
+	cacheTTL  time.Duration
 }
 
 func NewNewsService(
 	newsRepo NewsRepository,
 	txManager storage.TxManagerInterface,
 	redis RedisClient,
+	cacheTTL time.Duration,
 ) *NewsService {
 	return &NewsService{
 		newsRepo:  newsRepo,
 		txManager: txManager,
 		redis:     redis,
+		cacheTTL:  cacheTTL,
 	}
 }
 
@@ -133,6 +138,19 @@ func (s *NewsService) GetNewsByID(
 ) (*dto.NewsResponse, error) {
 	const op = "service.NewsService.GetNewsByID"
 
+	cacheKey := fmt.Sprintf("news:%s", req.ID)
+
+	cachedNews, err := s.redis.GetRedis().Get(ctx, cacheKey).Result()
+	if err == nil {
+		logger.Log.Info(op, "Cache hit for news ID", req.ID)
+		var newsResp dto.NewsResponse
+		if err := json.Unmarshal([]byte(cachedNews), &newsResp); err != nil {
+			logger.Log.Error(op, "Failed to unmarshal cached news", err)
+			return nil, err
+		}
+		return &newsResp, nil
+	}
+
 	newsID, err := strconv.ParseInt(req.ID, 10, 64)
 	if err != nil {
 		logger.Log.Error(op, "Failed to parse news ID", err)
@@ -174,6 +192,16 @@ func (s *NewsService) GetNewsByID(
 			EndTime:   news.EndTime,
 			Content:   contentDTO,
 		}
+
+		toCache, err := json.Marshal(resp)
+		if err != nil {
+			logger.Log.Error(op, "Failed to marshal news for caching", err)
+		} else {
+			if err := s.redis.GetRedis().Set(ctx, cacheKey, toCache, s.cacheTTL).Err(); err != nil {
+				logger.Log.Error(op, "Failed to set cache", cacheKey, "error", err)
+			}
+		}
+
 		return nil
 	})
 
@@ -321,6 +349,12 @@ func (s *NewsService) UpdateNews(
 		return nil, err
 	}
 	logger.Log.Info(op, "News updated successfully", req.ID)
+
+	cacheKey := fmt.Sprintf("news:%s", req.ID)
+	if err := s.redis.GetRedis().Del(ctx, cacheKey).Err(); err != nil {
+		logger.Log.Error(op, "Failed to invalidate cache", cacheKey, "error", err)
+	}
+
 	return resp, nil
 }
 
@@ -357,5 +391,11 @@ func (s *NewsService) DeleteNews(
 	if err != nil {
 		return nil, err
 	}
+
+	cacheKey := fmt.Sprintf("news:%s", req.ID)
+	if err := s.redis.GetRedis().Del(ctx, cacheKey).Err(); err != nil {
+		logger.Log.Error(op, "Failed to invalidate cache", cacheKey, "error", err)
+	}
+
 	return resp, nil
 }

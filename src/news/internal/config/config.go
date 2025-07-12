@@ -31,6 +31,7 @@ type RedisConfig struct {
 	DialTimeout  time.Duration `yaml:"dial_timeout" env-default:"5s"`
 	ReadTimeout  time.Duration `yaml:"read_timeout" env-default:"3s"`
 	WriteTimeout time.Duration `yaml:"write_timeout" env-default:"3s"`
+	CacheTTL     time.Duration `yaml:"cache_ttl" env-default:"5m"`
 }
 
 func (c RedisConfig) RedisAddr() string {
