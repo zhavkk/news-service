@@ -2,9 +2,11 @@ package postgres
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 	"github.com/zhavkk/news-service/src/news/internal/models"
 	"github.com/zhavkk/news-service/src/news/internal/storage"
@@ -100,14 +102,13 @@ func (r *NewsRepository) GetByID(ctx context.Context, id int64) (*models.News, e
 	)
 
 	if err != nil {
-		if err.Error() == "no rows in result set" {
-			logger.Log.Debug(op, "News not found", id)
+		if errors.Is(err, pgx.ErrNoRows) {
+			logger.Log.Debug(op, "News not found, id: ", id)
 			return nil, ErrNotFound
 		}
 		logger.Log.Error(op, "Failed to get news by ID", err, "id", id)
 		return nil, fmt.Errorf("%w: %v", ErrFailedToGetNews, err)
 	}
-
 	blocksQuery := `
     SELECT id, type, content, position, created_at 
     FROM content_blocks 
@@ -266,6 +267,7 @@ func (r *NewsRepository) List(
 	category string,
 	sortBy string,
 	sortDir string,
+	checkVisibility bool,
 ) ([]*models.News, int64, error) {
 	const op = "NewsRepository.List"
 	logger.Log.Debug(op, "offset", offset, "limit", limit, "search", search, "category", category)
@@ -284,6 +286,11 @@ func (r *NewsRepository) List(
 	args := []interface{}{}
 	paramCount := 1
 
+	if checkVisibility {
+		visibilityCondition := " AND NOW() BETWEEN n.start_time AND n.end_time"
+		query += visibilityCondition
+		countQuery += visibilityCondition
+	}
 	if search != "" {
 		searchCondition := fmt.Sprintf(" AND n.title ILIKE $%d", paramCount)
 		query += searchCondition
@@ -363,7 +370,7 @@ func (r *NewsRepository) List(
 	if len(newsList) > 0 {
 		if err = r.loadContentBlocks(ctx, newsList); err != nil {
 			logger.Log.Error(op, "Failed to load content blocks", err)
-			return nil, 0, err // ошибка уже обёрнута в loadContentBlocks
+			return nil, 0, err
 		}
 	}
 
