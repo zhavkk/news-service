@@ -18,7 +18,7 @@ type ContentBlock struct {
 	Type      BlockType `json:"type"`
 	Content   string    `json:"content"`
 	Position  int       `json:"position"`
-	CreatedAt string    `json:"created_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type BlockType string

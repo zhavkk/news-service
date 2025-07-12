@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"github.com/zhavkk/news-service/src/news/internal/dto"
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 	"github.com/zhavkk/news-service/src/news/internal/models"
@@ -41,21 +42,30 @@ type NewsRepository interface {
 		search string,
 		category string,
 		sortBy string,
-		sortDir string) ([]*models.News, int64, error)
+		sortDir string,
+		checkVisibility bool,
+	) ([]*models.News, int64, error)
+}
+
+type RedisClient interface {
+	GetRedis() *redis.Client
 }
 
 type NewsService struct {
 	newsRepo  NewsRepository
 	txManager storage.TxManagerInterface
+	redis     RedisClient
 }
 
 func NewNewsService(
 	newsRepo NewsRepository,
 	txManager storage.TxManagerInterface,
+	redis RedisClient,
 ) *NewsService {
 	return &NewsService{
 		newsRepo:  newsRepo,
 		txManager: txManager,
+		redis:     redis,
 	}
 }
 
@@ -193,6 +203,7 @@ func (s *NewsService) ListNews(
 			req.Category,
 			req.SortBy,
 			req.SortDir,
+			req.CheckVisibility,
 		)
 		if err != nil {
 			return err

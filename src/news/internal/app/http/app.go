@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/zhavkk/news-service/src/news/internal/config"
+	v1 "github.com/zhavkk/news-service/src/news/internal/handlers/v1"
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 )
 
@@ -16,7 +17,7 @@ type HTTPApp struct {
 	port     int
 }
 
-func New(cfg *config.Config) *HTTPApp {
+func New(cfg *config.Config, newsService v1.NewsService) *HTTPApp {
 
 	app := fiber.New(fiber.Config{
 		ReadTimeout:  5 * time.Second,
@@ -27,6 +28,7 @@ func New(cfg *config.Config) *HTTPApp {
 
 	setupMiddlewares(app)
 
+	setupRoutes(app, newsService)
 	return &HTTPApp{
 		fiberApp: app,
 		port:     cfg.HTTP.Port,
@@ -52,4 +54,12 @@ func setupMiddlewares(app *fiber.App) {
 
 	// cors and etc
 
+}
+
+func setupRoutes(app *fiber.App, newsService v1.NewsService) {
+	api := app.Group("/api")
+	v1Group := api.Group("/v1")
+
+	newsHandler := v1.NewHandler(newsService)
+	newsHandler.RegisterRoutes(v1Group)
 }
