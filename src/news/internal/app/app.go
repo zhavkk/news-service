@@ -30,7 +30,7 @@ func NewApp(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, err
 	}
 
-	newsService := service.NewNewsService(newsRepo, txManager, redis)
+	newsService := service.NewNewsService(newsRepo, txManager, redis, cfg.Redis.CacheTTL)
 
 	httpServer := httpapp.New(cfg, newsService)
 	logger.Log.Info("Application initialized successfully", "env", cfg.Env, "port", cfg.HTTP.Port)
