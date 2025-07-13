@@ -74,6 +74,17 @@ func NewNewsService(
 	}
 }
 
+// CreateNews godoc
+// @Summary      Create a news item
+// @Description  Adds a new news item to the database with content blocks
+// @Tags         news
+// @Accept       json
+// @Produce      json
+// @Param        news  body      dto.CreateNewsRequest  true  "News to create"
+// @Success      201   {object}  dto.NewsResponse
+// @Failure      400   {object}  dto.ErrorResponse
+// @Failure      500   {object}  dto.ErrorResponse
+// @Router       /news [post]
 func (s *NewsService) CreateNews(
 	ctx context.Context,
 	req dto.CreateNewsRequest,
@@ -132,6 +143,18 @@ func (s *NewsService) CreateNews(
 
 }
 
+// GetNewsByID godoc
+// @Summary      Get a news item by ID
+// @Description  Retrieves a news item and its content blocks by its ID
+// @Tags         news
+// @Produce      json
+// @Param        id                path      string  true  "News ID"
+// @Param        check_visibility  query     bool    false "Check visibility (start/end time)" default(true)
+// @Success      200               {object}  dto.NewsResponse
+// @Failure      400               {object}  dto.ErrorResponse
+// @Failure      404               {object}  dto.ErrorResponse
+// @Failure      500               {object}  dto.ErrorResponse
+// @Router       /news/{id} [get]
 func (s *NewsService) GetNewsByID(
 	ctx context.Context,
 	req dto.GetNewsByIDRequest,
@@ -212,6 +235,22 @@ func (s *NewsService) GetNewsByID(
 	return resp, nil
 }
 
+// ListNews godoc
+// @Summary      Get a list of news
+// @Description  Retrieves a list of news items with pagination, filtering, and sorting
+// @Tags         news
+// @Produce      json
+// @Param        page              query     int     false "Page number for pagination" default(1)
+// @Param        limit             query     int     false "Number of items per page" default(10)
+// @Param        search            query     string  false "Search term for news titles"
+// @Param        category          query     string  false "Filter by category"
+// @Param        sort_by           query     string  false "Field to sort by" Enums(created_at, start_time, end_time, title, category) default(created_at)
+// @Param        sort_dir          query     string  false "Sort direction" Enums(asc, desc) default(desc)
+// @Param        check_visibility  query     bool    false "Check visibility (start/end time)" default(true)
+// @Success      200               {object}  dto.NewsListResponse
+// @Failure      400               {object}  dto.ErrorResponse
+// @Failure      500               {object}  dto.ErrorResponse
+// @Router       /news [get]
 func (s *NewsService) ListNews(
 	ctx context.Context,
 	req dto.NewsListRequest,
@@ -282,6 +321,19 @@ func (s *NewsService) ListNews(
 	return resp, nil
 }
 
+// UpdateNews godoc
+// @Summary      Update a news item
+// @Description  Updates a news item's details and content blocks by its ID
+// @Tags         news
+// @Accept       json
+// @Produce      json
+// @Param        id    path      string                 true  "News ID"
+// @Param        news  body      dto.UpdateNewsRequest  true  "Fields to update"
+// @Success      200   {object}  dto.UpdateNewsResponse
+// @Failure      400   {object}  dto.ErrorResponse
+// @Failure      404   {object}  dto.ErrorResponse
+// @Failure      500   {object}  dto.ErrorResponse
+// @Router       /news/{id} [put]
 func (s *NewsService) UpdateNews(
 	ctx context.Context,
 	req dto.UpdateNewsRequest,
@@ -358,6 +410,17 @@ func (s *NewsService) UpdateNews(
 	return resp, nil
 }
 
+// DeleteNews godoc
+// @Summary      Delete a news item
+// @Description  Deletes a news item by its ID
+// @Tags         news
+// @Produce      json
+// @Param        id   path      string  true  "News ID"
+// @Success      200  {object}  dto.DeleteNewsResponse
+// @Failure      400  {object}  dto.ErrorResponse
+// @Failure      404  {object}  dto.ErrorResponse
+// @Failure      500  {object}  dto.ErrorResponse
+// @Router       /news/{id} [delete]
 func (s *NewsService) DeleteNews(
 	ctx context.Context,
 	req dto.DeleteNewsRequest,

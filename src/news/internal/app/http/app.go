@@ -7,7 +7,10 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	swagger "github.com/swaggo/fiber-swagger"
+	_ "github.com/zhavkk/news-service/src/news/docs"
 	"github.com/zhavkk/news-service/src/news/internal/config"
+
 	v1 "github.com/zhavkk/news-service/src/news/internal/handlers/v1"
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 )
@@ -57,6 +60,8 @@ func setupMiddlewares(app *fiber.App) {
 }
 
 func setupRoutes(app *fiber.App, newsService v1.NewsService) {
+	app.Get("/swagger/*", swagger.WrapHandler)
+
 	api := app.Group("/api")
 	v1Group := api.Group("/v1")
 

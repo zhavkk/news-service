@@ -11,6 +11,13 @@ import (
 	"github.com/zhavkk/news-service/src/news/internal/logger"
 )
 
+// @title           News Service API
+// @version         1.0
+// @description     service for creating and managing news.
+// @termsOfService  http://swagger.io/terms/
+
+// @host      localhost:8080
+// @BasePath  /api/v1
 func main() {
 
 	cfg := config.MustLoad("src/news/config/config.yml")
