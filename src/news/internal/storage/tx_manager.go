@@ -87,3 +87,7 @@ func GetTxFromContext(ctx context.Context) (pgx.Tx, bool) {
 	tx, ok := ctx.Value(txKey{}).(pgx.Tx)
 	return tx, ok
 }
+
+func NewTxManagerForTest(db *Storage) *TxManager {
+	return &TxManager{db: db}
+}

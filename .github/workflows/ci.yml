@@ -6,9 +6,10 @@ on:
   pull_request:
     branches: [main,dev]
 
+  
 jobs:
-  go-lint-and-test:
-    name: Go Lint and Test
+  go-lint:
+    name: Go lint
     runs-on: ubuntu-latest
 
     steps:
@@ -20,11 +21,35 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Tidy modules and install tools
+        run: |
+          go mod tidy
+          make go-deps
+
+      - name: Run golangci-lint
+        run: make go-lint
+  
+  tests:
+    name: Go tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose-plugin
+          docker compose version
+          
       - name: Install dependencies
         run: make deps
 
-      - name: Run golangci-lint
-        run: make lint
-  
       - name: Run tests
         run: make test

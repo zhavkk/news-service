@@ -1,54 +1,48 @@
-SERVICE := news
-DB_URL := postgres://postgres:password@localhost:5432/news?sslmode=disable
-MIGRATIONS_DIR := ./src/news/migrations/postgres
 
-.PHONY: go-lint
-go-lint:
-	@echo "Running Go linter..."
-	@if [ -z "$$(find . -type f -name '*.go')" ]; then \
-    	echo "No Go files found."; \
-	else \
-    	golangci-lint run; \
-	fi
+CONFIG_PATH=./src/news/config/config.yaml
+COMPOSE_PATH=./src/news/config/docker-compose.yml
+MIGRATIONS_DIR=./src/news/migrations/postgres
+DB_URL=postgres://user:password@localhost:5432/news_service?sslmode=disable
+
+DB_URL_TEST="postgres://user:password@localhost:5432/news_service_test?sslmode=disable"
 
 
-.PHONY: go-deps
-go-deps:
-	go mod tidy
-	go install github.com/pressly/goose/v3/cmd/goose@latest
-	go install github.com/golang/mock/mockgen@latest
-	go install mvdan.cc/gofumpt@latest
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+.PHONY: compose-up
+compose-up:
+	@docker compose -f $(COMPOSE_PATH) --project-directory ./config up -d
 
-.PHONY: go-fmt
-go-fmt:
-	gofumpt -w .
+.PHONY: compose-down
+compose-down:
+	@docker compose -f $(COMPOSE_PATH) --project-directory ./config down 
 
+.PHONY: migrate-up
+migrate-up:
+	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_URL)" up
 
-.PHONY: lint
-lint: go-lint 
+.PHONY: migrate-down
+migrate-down:
+	goose -dir $(MIGRATIONS_DIR) postgres "$(DB_URL)" down
 
-.PHONY: deps
-deps: go-deps
+.PHONY: migrate-create
+migrate-create:
+	@read -p "Enter migration name: " name; \
+    goose -dir $(MIGRATIONS_DIR) create $${name} sql
 
-.PHONY: fmt
-fmt: go-fmt
+.PHONY: test-migrate-up
+test-migrate-up:
+	@echo "==> Applying migrations to TEST database..."
+	@goose -dir $(MIGRATIONS_DIR) postgres "$(DB_URL_TEST)" up
+
+.PHONY: test-migrate-down
+test-migrate-down:
+	@echo "==> Rolling back migrations from TEST database..."
+	@goose -dir $(MIGRATIONS_DIR) postgres "$(DB_URL_TEST)" down
+
 
 .PHONY: test
-test:
-	@echo "Running tests..."
-	@if [ -z "$$(find . -type f -name '*.go')" ]; then \
-	    echo "No Go files found."; \
-	else \
-	    go test ./... -v; \
-	fi
+test: test-migrate-up
+	@echo "==> Running tests..."
+	@go test -v -race ./...
 
-.PHONY: docker-build
-docker-build:
-	@echo "Building Docker image..."
-    docker build -t news-service:latest .
-
-.PHONY: docker-run
-docker-run:
-	@echo "Running Docker container..."
-	docker run -p 8080:8080 news-service:latest
+.PHONY: deps-up
+deps-up: compose-up migrate-up

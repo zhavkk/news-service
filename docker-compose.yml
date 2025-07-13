@@ -1,6 +1,18 @@
-version: '3.8'
 
 services:
+  news-service:
+    build: .
+    container_name: news_app
+    ports:
+      - "8080:8080"
+    depends_on: 
+      postgres:
+        condition: service_healthy 
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+
   postgres:
     image: postgres:15-alpine
     container_name: news_db
@@ -12,6 +24,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./init-db-for-tests.sh:/docker-entrypoint-initdb.d/init-db-for-tests.sh
+
     restart: unless-stopped
   
   redis:

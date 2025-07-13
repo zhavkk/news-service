@@ -12,7 +12,7 @@ CREATE TABLE news (
 CREATE TABLE content_blocks (
     id BIGSERIAL PRIMARY KEY,
     news_id BIGINT NOT NULL REFERENCES news(id) ON DELETE CASCADE,
-    type TEXT NOT NULL CHECK (type IN ('text','image','link')),
+    type TEXT NOT NULL CHECK (type IN ('text','link')),
     content TEXT NOT NULL,
     position INT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
