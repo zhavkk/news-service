@@ -2,9 +2,9 @@
 CONFIG_PATH=./src/news/config/config.yaml
 COMPOSE_PATH=./src/news/config/docker-compose.yml
 MIGRATIONS_DIR=./src/news/migrations/postgres
-DB_URL=postgres://user:password@localhost:5432/news_service?sslmode=disable
+DB_URL?="postgres://user:password@localhost:5432/news_service?sslmode=disable"
+DB_URL_TEST?="postgres://user:password@localhost:5432/news_service_test?sslmode=disable"
 
-DB_URL_TEST="postgres://user:password@localhost:5432/news_service_test?sslmode=disable"
 
 
 .PHONY: compose-up
@@ -46,3 +46,15 @@ test: test-migrate-up
 
 .PHONY: deps-up
 deps-up: compose-up migrate-up
+
+
+.PHONY: go-deps
+go-deps:
+	@echo "==> Installing Go dependencies..."
+	@go install github.com/pressly/goose/v3/cmd/goose@latest
+	@go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+
+.PHONY: go-lint
+go-lint:
+	@echo "==> Running linter..."
+	@golangci-lint run ./... -v

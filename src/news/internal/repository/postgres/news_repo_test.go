@@ -2,6 +2,7 @@ package postgres_test
 
 import (
 	"context"
+	"os"
 	"testing"
 	"time"
 
@@ -16,8 +17,13 @@ import (
 
 func setupTestDB(t *testing.T) (*postgres.NewsRepository, storage.TxManagerInterface, func()) {
 
+	dbURL := os.Getenv("DB_URL_TEST")
+	if dbURL == "" {
+		dbURL = "postgres://user:password@localhost:5432/news_service_test?sslmode=disable"
+	}
+
 	cfg := &config.Config{
-		DBURL: "postgres://user:password@localhost:5432/news_service_test?sslmode=disable",
+		DBURL: dbURL,
 	}
 	logger.Init("local")
 	db, err := storage.NewStorage(context.Background(), cfg)
@@ -26,7 +32,8 @@ func setupTestDB(t *testing.T) (*postgres.NewsRepository, storage.TxManagerInter
 	cleanup := func() {
 		_, err := db.GetPool().Exec(context.Background(), "TRUNCATE TABLE news, content_blocks RESTART IDENTITY CASCADE")
 		require.NoError(t, err)
-		db.Close()
+		require.NoError(t, db.Close())
+
 	}
 
 	repo := postgres.NewNewsRepository(db)
