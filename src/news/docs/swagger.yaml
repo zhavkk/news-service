@@ -1,0 +1,342 @@
+basePath: /api/v1
+definitions:
+  dto.ContentBlockResponse:
+    properties:
+      content:
+        type: string
+      id:
+        type: string
+      position:
+        type: integer
+      type:
+        type: string
+    type: object
+  dto.CreateContentBlock:
+    properties:
+      content:
+        type: string
+      position:
+        minimum: 0
+        type: integer
+      type:
+        enum:
+        - text
+        - link
+        type: string
+    required:
+    - content
+    - position
+    - type
+    type: object
+  dto.CreateNewsRequest:
+    properties:
+      category:
+        maxLength: 100
+        minLength: 2
+        type: string
+      content:
+        items:
+          $ref: '#/definitions/dto.CreateContentBlock'
+        type: array
+      end_time:
+        type: string
+      start_time:
+        type: string
+      title:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - category
+    - content
+    - end_time
+    - start_time
+    - title
+    type: object
+  dto.DeleteNewsResponse:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+    type: object
+  dto.ErrorResponse:
+    properties:
+      error:
+        type: string
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  dto.NewsListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/dto.NewsResponse'
+        type: array
+      limit:
+        type: integer
+      page:
+        type: integer
+      total_count:
+        type: integer
+    type: object
+  dto.NewsResponse:
+    properties:
+      category:
+        type: string
+      content:
+        items:
+          $ref: '#/definitions/dto.ContentBlockResponse'
+        type: array
+      created_at:
+        type: string
+      end_time:
+        type: string
+      id:
+        type: string
+      start_time:
+        type: string
+      title:
+        type: string
+    type: object
+  dto.UpdateNewsRequest:
+    properties:
+      category:
+        maxLength: 100
+        minLength: 2
+        type: string
+      content:
+        items:
+          $ref: '#/definitions/dto.CreateContentBlock'
+        type: array
+      end_time:
+        type: string
+      id:
+        type: string
+      start_time:
+        type: string
+      title:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - id
+    type: object
+  dto.UpdateNewsResponse:
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: service for creating and managing news.
+  termsOfService: http://swagger.io/terms/
+  title: News Service API
+  version: "1.0"
+paths:
+  /news:
+    get:
+      description: Retrieves a list of news items with pagination, filtering, and
+        sorting
+      parameters:
+      - default: 1
+        description: Page number for pagination
+        in: query
+        name: page
+        type: integer
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - description: Search term for news titles
+        in: query
+        name: search
+        type: string
+      - description: Filter by category
+        in: query
+        name: category
+        type: string
+      - default: created_at
+        description: Field to sort by
+        enum:
+        - created_at
+        - start_time
+        - end_time
+        - title
+        - category
+        in: query
+        name: sort_by
+        type: string
+      - default: desc
+        description: Sort direction
+        enum:
+        - asc
+        - desc
+        in: query
+        name: sort_dir
+        type: string
+      - default: true
+        description: Check visibility (start/end time)
+        in: query
+        name: check_visibility
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NewsListResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get a list of news
+      tags:
+      - news
+    post:
+      consumes:
+      - application/json
+      description: Adds a new news item to the database with content blocks
+      parameters:
+      - description: News to create
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateNewsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.NewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Create a news item
+      tags:
+      - news
+  /news/{id}:
+    delete:
+      description: Deletes a news item by its ID
+      parameters:
+      - description: News ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.DeleteNewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Delete a news item
+      tags:
+      - news
+    get:
+      description: Retrieves a news item and its content blocks by its ID
+      parameters:
+      - description: News ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: true
+        description: Check visibility (start/end time)
+        in: query
+        name: check_visibility
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.NewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Get a news item by ID
+      tags:
+      - news
+    put:
+      consumes:
+      - application/json
+      description: Updates a news item's details and content blocks by its ID
+      parameters:
+      - description: News ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: news
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateNewsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UpdateNewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.ErrorResponse'
+      summary: Update a news item
+      tags:
+      - news
+swagger: "2.0"
