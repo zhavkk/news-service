@@ -2,8 +2,8 @@
 CONFIG_PATH=./src/news/config/config.yaml
 COMPOSE_PATH=./src/news/config/docker-compose.yml
 MIGRATIONS_DIR=./src/news/migrations/postgres
-DB_URL?="postgres://user:password@localhost:5432/news_service?sslmode=disable"
-DB_URL_TEST?="postgres://user:password@localhost:5432/news_service_test?sslmode=disable"
+DB_URL?=postgres://user:password@localhost:5432/news_service?sslmode=disable
+DB_URL_TEST?=postgres://user:password@localhost:5432/news_service_test?sslmode=disable
 
 
 
