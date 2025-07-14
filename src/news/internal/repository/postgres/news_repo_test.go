@@ -30,7 +30,7 @@ func setupTestDB(t *testing.T) (*postgres.NewsRepository, storage.TxManagerInter
 	}
 
 	repo := postgres.NewNewsRepository(db)
-	txManager := storage.NewTxManagerForTest(db) // Используем специальный конструктор для тестов, если его нет, создайте его.
+	txManager := storage.NewTxManagerForTest(db)
 
 	return repo, txManager, cleanup
 }
